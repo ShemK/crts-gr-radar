@@ -67,8 +67,9 @@ class usrp_echotimer_dual_cw(gr.top_block, Qt.QWidget):
         ##################################################
         # Variables
         ##################################################
-        self.samp_rate = samp_rate = self.radar['samp_rate']
-        self.packet_len = packet_len = self.radar['packet_len']
+	
+        self.samp_rate = samp_rate = int(self.radar['samp_rate'])
+        self.packet_len = packet_len = 2**21
         self.freq_res = freq_res = samp_rate/float(packet_len)
         self.freq = freq = self.radar['freq']
         self.center_freq = center_freq = self.radar['center_freq']
@@ -76,16 +77,26 @@ class usrp_echotimer_dual_cw(gr.top_block, Qt.QWidget):
         self.time_res = time_res = packet_len/float(samp_rate)
         self.threshold = threshold = -50
         self.samp_protect = samp_protect = 1
-        self.range_time = range_time = 30
+        self.range_time = range_time = 30 
         self.range_res = range_res = 3e8/2/float((freq[1]-freq[0]))
         self.range_add = range_add = -1
         self.min_output_buffer = min_output_buffer = int(packet_len*2)
         self.max_output_buffer = max_output_buffer = 0
         self.gain_tx = gain_tx = self.radar['tx_gain']
         self.gain_rx = gain_rx = self.radar['rx_gain']
-        self.delay_samp = delay_samp = self.radar['delay_samp']
+        self.delay_samp = delay_samp = int(self.radar['delay_samp'])
         self.decim_fac = decim_fac = self.radar['decim_fac']
         self.amplitude = amplitude = 0.5
+
+	self.radar['tx_addr'] =  "addr="+str(self.radar['tx_addr'])
+	self.radar['tx_clock_source'] = str(self.radar['tx_clock_source'])
+	self.radar['tx_time_source'] = str(self.radar['tx_time_source'])
+	self.radar['tx_antenna'] = str(self.radar['tx_antenna'])
+	self.radar['rx_addr'] = "addr="+str(self.radar['rx_addr'])	
+	self.radar['rx_clock_source'] = str(self.radar['rx_clock_source'])
+	self.radar['rx_time_source'] = str(self.radar['rx_time_source'])
+	self.radar['rx_antenna'] = str(self.radar['rx_antenna'])
+
 
         ##################################################
         # Blocks
@@ -124,6 +135,7 @@ class usrp_echotimer_dual_cw(gr.top_block, Qt.QWidget):
                                             self.radar['tx_time_source'], self.radar['tx_antenna'], gain_tx, self.radar['tx_timeout'], 0.05, self.radar['tx_lo_offset'], \
                                                 self.radar['rx_addr'], '',self.radar['rx_clock_source'], self.radar['rx_time_source'], self.radar['rx_antenna'], gain_rx, \
                                                     self.radar['rx_timeout'], 0.05, self.radar['rx_lo_offset'], "packet_len")
+	
         (self.radar_usrp_echotimer_cc_0).set_min_output_buffer(4194304)
         self.radar_ts_fft_cc_0_0 = radar.ts_fft_cc(packet_len/decim_fac,  "packet_len")
         (self.radar_ts_fft_cc_0_0).set_min_output_buffer(4194304)

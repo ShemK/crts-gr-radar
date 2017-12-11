@@ -31,8 +31,8 @@ class usrp_echotimer_dual_cw(gr.top_block):
     	parser.add_option('-f', '--file',action="store", dest="filename", default=False, help="provide csv file name")
     	options, args = parser.parse_args()
     	if(options.filename):
-        	self.filename = str(options.filename) 
-		self.store_message = True
+            self.filename = str(options.filename) 
+            self.store_message = True
         ##################################################
         # Variables
         ##################################################

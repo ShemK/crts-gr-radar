@@ -26,6 +26,13 @@ class usrp_echotimer_dual_cw(gr.top_block):
         self.radar = self.radar['radar']
         self.filename = ""
         self.store_message = False
+
+    	parser = OptionParser()
+    	parser.add_option('-f', '--file',action="store", dest="filename", default=False, help="provide csv file name")
+    	options, args = parser.parse_args()
+    	if(options.filename):
+        	self.filename = str(options.filename) 
+		self.store_message = True
         ##################################################
         # Variables
         ##################################################
@@ -261,14 +268,10 @@ class usrp_echotimer_dual_cw(gr.top_block):
 
 def main(top_block_cls=usrp_echotimer_dual_cw, options=None):
 
-    parser = OptionParser()
-    parser.add_option('-f', '--file',action="store_true", dest="filename", default=False, help="provide csv file name"),
 
     tb = top_block_cls()
 
-    options, args = parser.parse_args()
-    if(options.filename):
-        tb.filename = options.filename 
+
 
     tb.start()
     try:

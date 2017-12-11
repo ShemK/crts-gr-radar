@@ -24,7 +24,8 @@ class usrp_echotimer_dual_cw(gr.top_block):
         self.configEditor = ConfigEditor()
         self.radar = self.configEditor.get_configuration('basic_radar.cfg')
         self.radar = self.radar['radar']
-
+        self.filename = ""
+        self.store_message = False
         ##################################################
         # Variables
         ##################################################
@@ -87,7 +88,7 @@ class usrp_echotimer_dual_cw(gr.top_block):
         (self.radar_signal_generator_cw_c_0_0).set_min_output_buffer(4194304)
         self.radar_signal_generator_cw_c_0 = radar.signal_generator_cw_c(packet_len, samp_rate, (freq[0], ), amplitude, "packet_len")
         (self.radar_signal_generator_cw_c_0).set_min_output_buffer(4194304)
-        self.radar_print_results_0 = radar.print_results(False, "")
+        self.radar_print_results_0 = radar.print_results(self.store_message, self.filename)
         self.radar_msg_manipulator_0 = radar.msg_manipulator(('range',), (range_add, ), (1, ))
         self.radar_find_max_peak_c_0 = radar.find_max_peak_c(samp_rate/decim_fac, threshold, int(samp_protect), ((-300,300)), True, "packet_len")
         self.radar_estimator_fsk_0 = radar.estimator_fsk(center_freq, (freq[1]-freq[0]), False)
@@ -260,7 +261,15 @@ class usrp_echotimer_dual_cw(gr.top_block):
 
 def main(top_block_cls=usrp_echotimer_dual_cw, options=None):
 
+    parser = OptionParser()
+    parser.add_option('-f', '--file',action="store_true", dest="filename", default=False, help="provide csv file name"),
+
     tb = top_block_cls()
+
+    options, args = parser.parse_args()
+    if(options.filename):
+        tb.filename = options.filename 
+
     tb.start()
     try:
         raw_input('Press Enter to quit: ')

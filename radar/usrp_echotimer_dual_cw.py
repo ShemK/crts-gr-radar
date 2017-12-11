@@ -87,15 +87,15 @@ class usrp_echotimer_dual_cw(gr.top_block, Qt.QWidget):
         self.delay_samp = delay_samp = int(self.radar['delay_samp'])
         self.decim_fac = decim_fac = self.radar['decim_fac']
         self.amplitude = amplitude = 0.5
-
-	self.radar['tx_addr'] =  "addr="+str(self.radar['tx_addr'])
-	self.radar['tx_clock_source'] = str(self.radar['tx_clock_source'])
-	self.radar['tx_time_source'] = str(self.radar['tx_time_source'])
-	self.radar['tx_antenna'] = str(self.radar['tx_antenna'])
-	self.radar['rx_addr'] = "addr="+str(self.radar['rx_addr'])	
-	self.radar['rx_clock_source'] = str(self.radar['rx_clock_source'])
-	self.radar['rx_time_source'] = str(self.radar['rx_time_source'])
-	self.radar['rx_antenna'] = str(self.radar['rx_antenna'])
+        
+        self.radar['tx_addr'] =  "addr="+str(self.radar['tx_addr'])
+        self.radar['tx_clock_source'] = str(self.radar['tx_clock_source'])
+        self.radar['tx_time_source'] = str(self.radar['tx_time_source'])
+        self.radar['tx_antenna'] = str(self.radar['tx_antenna'])
+        self.radar['rx_addr'] = "addr="+str(self.radar['rx_addr'])	
+        self.radar['rx_clock_source'] = str(self.radar['rx_clock_source'])
+        self.radar['rx_time_source'] = str(self.radar['rx_time_source'])
+        self.radar['rx_antenna'] = str(self.radar['rx_antenna'])
 
 
         ##################################################

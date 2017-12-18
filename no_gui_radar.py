@@ -16,6 +16,7 @@ from optparse import OptionParser
 import threading
 import os,sys
 import radar
+import socket
 
 file_path = os.path.dirname(os.path.abspath(__file__))
 scripts = file_path + '/radar'
@@ -52,14 +53,13 @@ class usrp_echotimer_dual_cw(gr.top_block):
 
         if(options.config_file):
             self.config_file =  str(options.config_file)
-            self.config_file = file_path+self.config_file
-            print self.config_file
+            self.config_file = file_path+'/scenarios/'+self.config_file
             self.radar = self.configEditor.get_configuration(self.config_file)
         else:
-            self.radar = self.configEditor.get_configuration('basic_radar.cfg')
+            self.radar = self.configEditor.get_configuration('radar/basic_radar.cfg')
 
         if(options.node_num):
-            self.node_id = "Node"+str(options.node_num)
+            self.node_id = "node"+str(options.node_num)
             self.radar = self.radar[self.node_id]
         else:
             self.radar = self.radar['radar']
@@ -306,17 +306,22 @@ class crts_connector(threading.Thread):
     def run(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((self.controller_ip, self.controller_port))
-        data = s.recv(BUFFER_SIZE)
+        data = s.recv(self.BUFFER_SIZE)
+        data = 1000
+        s.send(data)
 
 def main(top_block_cls=usrp_echotimer_dual_cw, options=None):
 
     tb = top_block_cls()
     tb.start()
+    '''
     try:
         raw_input('Press Enter to quit: ')
     except EOFError:
+        print "Error"
         pass
     tb.stop()
+    '''
     tb.wait()
 
 

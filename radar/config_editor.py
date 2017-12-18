@@ -26,9 +26,9 @@ class ConfigEditor(object):
 
     #   read basic information that every node should have
     def get_configuration(self,config_file):
-        config_path = os.path.dirname(os.path.abspath(__file__))
-        config_path = config_path + '/'+config_file
-        return self.read_config_file(config_path)
+        #config_path = os.path.dirname(os.path.abspath(__file__))
+        #config_path = config_path + '/'+config_file
+        return self.read_config_file(config_file)
 
 
 
@@ -36,6 +36,6 @@ class ConfigEditor(object):
 def main():
     configEditor = ConfigEditor()
     radar = configEditor.get_configuration('basic_radar.cfg')
-    
+
 if __name__ == '__main__':
     main()

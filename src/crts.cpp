@@ -310,8 +310,12 @@ struct node_parameters read_node_parameters(int node, char *scenario_file) {
           }
         }
       }
-    } else if (strcmp(tmpS, "interferer") == 0)
+    } else if (strcmp(tmpS, "interferer") == 0){
       np.node_type = INTERFERER;
+    } else if (strcmp(tmpS, "radar") == 0){
+      np.node_type = RADAR;
+    }
+      
   }
 
   // read all possible node settings

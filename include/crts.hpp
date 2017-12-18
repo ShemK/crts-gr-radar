@@ -13,9 +13,9 @@ void freeargcargv(int &argc, char **&argv);
 // Config files
 /////////////////////////////////////////////////////////////////
 
-void read_master_parameters(char *nameMasterScenFile, 
-                            int *num_scenarios, 
-                            bool *octave_log_summary); 
+void read_master_parameters(char *nameMasterScenFile,
+                            int *num_scenarios,
+                            bool *octave_log_summary);
 
 int read_master_scenario(char * nameMasterScenFile, int scenario_num,
                               char * scenario_name);
@@ -61,7 +61,8 @@ struct scenario_parameters {
 
 enum NodeType {
   COGNITIVE_RADIO = 0,    // cognitive radio node type
-  INTERFERER // interferer node type
+  INTERFERER, // interferer node type
+  RADAR  // radar node type
 };
 
 enum COGNITIVE_RADIO_TYPE {
@@ -86,9 +87,9 @@ enum interference_type {
   INTERFERENCE_TYPE_UNKNOWN
 };
 
-enum tx_freq_behavior { 
-  TX_FREQ_BEHAVIOR_FIXED = 0, 
-  TX_FREQ_BEHAVIOR_SWEEP, 
+enum tx_freq_behavior {
+  TX_FREQ_BEHAVIOR_FIXED = 0,
+  TX_FREQ_BEHAVIOR_SWEEP,
   TX_FREQ_BEHAVIOR_RANDOM,
   TX_FREQ_BEHAVIOR_UNKNOWN
 };
@@ -106,7 +107,7 @@ struct node_parameters {
   char python_file[100];
   char python_args[2048];
   char team_name[200];
-  
+
   // network settings
   char server_ip[20];
   char crts_ip[20];
@@ -114,12 +115,12 @@ struct node_parameters {
   int net_traffic_type;
   int net_burst_length;
   double net_mean_throughput;
-  
+
   // cognitive engine settings
   char cognitive_engine[100];
   double ce_timeout_ms;
-  char ce_args[2048]; 
-  
+  char ce_args[2048];
+
   // log/print settings
   bool print_rx_frame_metrics;
   bool log_phy_rx;
@@ -130,7 +131,7 @@ struct node_parameters {
   char phy_tx_log_file[260];
   char net_rx_log_file[260];
   char net_tx_log_file[260];
-  int generate_octave_logs; 
+  int generate_octave_logs;
 
   // USRP settings
   double rx_freq;
@@ -193,7 +194,7 @@ void print_node_parameters(struct node_parameters *np);
 #define CRTS_CR_PACKET_NUM_LEN 4      // number of bytes used for packet numbering
 #define CRTS_CR_PACKET_SR_LEN 12      // shift register length for pseudo-random packet generation
 // the controller will forcefully terminate all node processes after this many seconds have passed once the scenario has ended
-#define CRTS_FORCEFUL_TERMINATION_DELAY_S 5 
+#define CRTS_FORCEFUL_TERMINATION_DELAY_S 5
 
 enum crts_msg_type {
   CRTS_MSG_SCENARIO_PARAMETERS = 0,
@@ -204,7 +205,7 @@ enum crts_msg_type {
   CRTS_MSG_SUMMARY
 };
 
-// enumeration of all types of control and feedback passed between 
+// enumeration of all types of control and feedback passed between
 // the controller and all other nodes during an experiment
 #define CRTS_NUM_PARAM_TYPES 27
 enum crts_params {
@@ -225,12 +226,12 @@ enum crts_params {
   CRTS_RX_STATS,
   CRTS_RX_STATS_FB,
   CRTS_RX_STATS_RESET,
-  
+
   CRTS_NET_THROUGHPUT,
   CRTS_NET_TRAFFIC_TYPE,
 
   CRTS_FB_EN,
-  
+
   // interferer specific parameters
   CRTS_TX_DUTY_CYCLE,
   CRTS_TX_PERIOD,
@@ -239,7 +240,7 @@ enum crts_params {
   CRTS_TX_FREQ_MAX,
   CRTS_TX_FREQ_DWELL_TIME,
   CRTS_TX_FREQ_RES,
-  
+
   CRTS_UNKNOWN_PARAM
 };
 
@@ -249,7 +250,7 @@ enum crts_params {
 #define CRTS_TX_RATE_FB_EN        (1<<CRTS_TX_RATE)
 #define CRTS_TX_GAIN_FB_EN        (1<<CRTS_TX_GAIN)
 #define CRTS_TX_MOD_FB_EN         (1<<CRTS_TX_MOD)
-#define CRTS_TX_CRC_FB_EN         (1<<CRTS_TX_CRC)  
+#define CRTS_TX_CRC_FB_EN         (1<<CRTS_TX_CRC)
 #define CRTS_TX_FEC0_FB_EN        (1<<CRTS_TX_FEC0)
 #define CRTS_TX_FEC1_FB_EN        (1<<CRTS_TX_FEC1)
 
@@ -278,4 +279,8 @@ int crts_get_str2param(const char *);
 int crts_get_str2net_traffic_type(const char *);
 int crts_get_str2tx_freq_behavior(const char *);
 
+struct radar_params{
+  char node_id[6];
+  char config_file[100];
+};
 #endif

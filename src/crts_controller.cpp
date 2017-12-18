@@ -38,13 +38,20 @@ int num_nodes_terminated;
 long int bytes_sent[CRTS_MAX_NODES];
 long int bytes_received[CRTS_MAX_NODES];
 
+
+struct node_parameters np[48];
+
+
 int receive_msg_from_nodes(int *TCP_nodes, int num_nodes, ScenarioController *SC) {
   // Listen to sockets for messages from any node
   char msg[256];
   for (int i = 0; i < num_nodes; i++) {
     int rflag = recv(TCP_nodes[i], msg, 1, 0);
     int err = errno;
-
+    if(np[i].node_type == RADAR){
+      rflag = 2;
+      msg[0] = 10;
+    }
     // Handle errors
     if (rflag <= 0) {
       if (!((err == EAGAIN) || (err == EWOULDBLOCK))) {
@@ -79,7 +86,7 @@ int receive_msg_from_nodes(int *TCP_nodes, int num_nodes, ScenarioController *SC
             rflag = recv(TCP_nodes[i], &msg[fb_msg_ind], 1, 0);
             int fb_arg_len = get_feedback_arg_len(msg[fb_msg_ind]);
             fb_msg_ind++;
-            
+
             rflag = recv(TCP_nodes[i], &msg[fb_msg_ind], fb_arg_len, 0);
             SC->receive_feedback(i, msg[fb_msg_ind-1], (void *) &msg[fb_msg_ind]);
             fb_msg_ind += fb_arg_len;
@@ -90,6 +97,9 @@ int receive_msg_from_nodes(int *TCP_nodes, int num_nodes, ScenarioController *SC
           // receive the number of bytes sent and received
           rflag = recv(TCP_nodes[i], &bytes_sent[i], sizeof(long int), 0);
           rflag = recv(TCP_nodes[i], &bytes_received[i], sizeof(long int), 0);
+          break;
+
+        case 10:
           break;
         default:
           printf("Invalid message type received from node %i\n", i+1);
@@ -123,20 +133,20 @@ ScenarioController* create_sc(struct scenario_parameters *sp){
   if(!strcmp(sp->SC, "SC_CORNET_Tutorial"))
     SC = new SC_CORNET_Tutorial(argc, argv);
   // EDIT SET SC END FLAG
-    
+
   freeargcargv(argc, argv);
- 
+
   return SC;
 }
 
 void log_scenario_summary(int scenario_num, int rep_num, char *scenario_master_name,
                           char *scenario_name, struct scenario_parameters *sp){
- 
+
   char log_summary_filename[100];
   sprintf(log_summary_filename, "logs/octave/%s_summary.m", scenario_master_name);
 
   // Append to file if not first scenario and first rep
-  FILE *log_summary;  
+  FILE *log_summary;
   if ((scenario_num>1) || (rep_num>1))
     log_summary = fopen(log_summary_filename, "a");
   else{
@@ -149,9 +159,9 @@ void log_scenario_summary(int scenario_num, int rep_num, char *scenario_master_n
     fprintf(log_summary, "num_nodes(%i) = %i;\n\n", scenario_num, sp->num_nodes);
   }
   for (int i=0; i< sp->num_nodes; i++){
-    fprintf(log_summary, "bytes_sent(%i,%i,%i) = %li;\n", 
+    fprintf(log_summary, "bytes_sent(%i,%i,%i) = %li;\n",
             scenario_num, i+1, rep_num, bytes_sent[i]);
-    fprintf(log_summary, "bytes_received(%i,%i,%i) = %li;\n", 
+    fprintf(log_summary, "bytes_received(%i,%i,%i) = %li;\n",
             scenario_num, i+1, rep_num, bytes_received[i]);
   }
   fprintf(log_summary, "\n");
@@ -190,6 +200,13 @@ int main(int argc, char **argv) {
   sig_terminate = 0;
 
   int manual_execution = 0;
+
+  // objects needs for TCP links to cognitive radio nodes
+  int TCP_nodes[48];
+  struct sockaddr_in nodeAddr[48];
+  socklen_t node_addr_size[48];
+  for (int i = 0; i < 48; i++)
+    node_addr_size[i] = sizeof(nodeAddr[i]);
 
   // Use current username as default username for ssh
   const char* ssh_uname = std::getenv("LOGNAME");
@@ -283,20 +300,12 @@ int main(int argc, char **argv) {
     exit(EXIT_FAILURE);
   }
 
-  // objects needs for TCP links to cognitive radio nodes
-  int TCP_nodes[48];
-  struct sockaddr_in nodeAddr[48];
-  socklen_t node_addr_size[48];
-  for (int i = 0; i < 48; i++)
-    node_addr_size[i] = sizeof(nodeAddr[i]);
-  struct node_parameters np[48];
-
   // read master scenario config file
   int num_scenarios;
   char scenario_name[251];
   char *scenario_name_ptr;
   bool octave_log_summary;
-  
+
   if (!scenario_opt_given) {
     read_master_parameters(scenario_master_name, &num_scenarios, &octave_log_summary);
   } else {
@@ -307,7 +316,7 @@ int main(int argc, char **argv) {
   if (octave_log_summary);
     printf("Will generate a summary octave script: /logs/octave/%s.m\n", scenario_master_name);
   printf("Number of scenarios: %i\n\n", num_scenarios);
-  
+
   // variables for reading the system clock
   struct timeval tv;
   time_t time_s;
@@ -330,7 +339,7 @@ int main(int argc, char **argv) {
 
     if (scenario_opt_given)
       strcpy(scenario_master_name, scenario_name);
-      
+
     for (unsigned int rep_i = 1; rep_i <= scenario_reps; rep_i++) {
       printf("Scenario %i: %s\n", i + 1, scenario_name);
       printf("Rep: %i\n", rep_i);
@@ -345,7 +354,7 @@ int main(int argc, char **argv) {
       printf("Scenario controller: %s\n", sp.SC);
 
       // create the scenario controller
-      ScenarioController *SC = create_sc(&sp); 
+      ScenarioController *SC = create_sc(&sp);
 
       // determine the start time for the scenario based
       // on the current time and the number of nodes
@@ -363,7 +372,7 @@ int main(int argc, char **argv) {
         memset(&np[j], 0, sizeof(struct node_parameters));
         printf("Reading node %i's parameters...\n", j + 1);
         np[j] = read_node_parameters(j + 1, scenario_file);
-       
+
         // define log file names if they weren't defined by the scenario
         if (!strcmp(np[j].phy_rx_log_file, "")) {
           strcpy(np[j].phy_rx_log_file, scenario_name);
@@ -421,20 +430,35 @@ int main(int argc, char **argv) {
           switch (np[j].node_type) {
             case COGNITIVE_RADIO: sprintf(executable, "crts_cognitive_radio"); break;
             case INTERFERER: sprintf(executable, "crts_interferer"); break;
+            case RADAR: sprintf(executable, "no_gui_radar.py"); break;
           }
-
+          char command[2000];
           char sysout_log[200];
+          printf("node_type: %d\n", np[j].node_type);
+
           sprintf(sysout_log, "%s/logs/sysout/%s_node_%i_rep_%i.sysout", crts_dir, scenario_name, j+1, rep_i);
 
-          char command[2000];
-          sprintf(command, "ssh %s@%s 'sleep 1 && cd %s && ./%s -a %s 2>&1 &' > %s &",
+          if(np[j].node_type!=RADAR){
+
+            sprintf(command, "ssh %s@%s 'sleep 1 && cd %s && ./%s -a %s 2>&1 &' > %s &",
                   ssh_uname, np[j].server_ip, crts_dir, executable, serv_ip_addr, sysout_log);
-          
-          ssh_return = system(command);
-          if (ssh_return) {
-            printf("SSH failed for node %i with address %s\n", j+1, np[j].server_ip); 
-            exit(EXIT_FAILURE);
+
+            ssh_return = system(command);
+
+            if (ssh_return) {
+              printf("SSH failed for node %i with address %s\n", j+1, np[j].server_ip);
+              exit(EXIT_FAILURE);
+            }
+          } else{
+            sprintf(command, "ssh %s@%s 'sleep 1 && cd %s && python %s -a %s -c %s -n %d 2>&1 &' > %s &",
+                  ssh_uname, np[j].server_ip, crts_dir, executable, serv_ip_addr, scenario_file, j+1,sysout_log);
+            printf("%s\n",command );
+
+
+            ssh_return = system(command);
+
           }
+
         }
 
         if (ssh_return != 0) {
@@ -488,9 +512,9 @@ int main(int argc, char **argv) {
         send(TCP_nodes[j], (void *)&msg_type, sizeof(char), 0);
         send(TCP_nodes[j], (void *)&sp, sizeof(struct scenario_parameters), 0);
         send(TCP_nodes[j], (void *)&np[j], sizeof(struct node_parameters), 0);
-      
+
         // copy node parameters to the scenario controller object
-        SC->np[j] = np[j]; 
+        SC->np[j] = np[j];
       }
 
       printf("\n");
@@ -527,12 +551,12 @@ int main(int argc, char **argv) {
 
       SC->set_sc_timeout_ms(sp.sc_timeout_ms);
       SC->start_sc();
-      
+
       // main loop: wait for any of three possible termination conditions
       int time_terminate = 0;
       int msg_terminate = 0;
       num_nodes_terminated = 0;
-      while ((!sig_terminate) && (!msg_terminate) && (!time_terminate)) { 
+      while ((!sig_terminate) && (!msg_terminate) && (!time_terminate)) {
         msg_terminate = receive_msg_from_nodes(&TCP_nodes[0], sp.num_nodes, SC);
 
         // Check if the scenario should be terminated based on the elapsed time.
@@ -586,13 +610,13 @@ int main(int argc, char **argv) {
           printf("Running CRTS_CR cleanup on node %i: %s\n", j+1, np[j].server_ip);
           char command[2000] = "ssh ";
           sprintf(command, "ssh %s@%s 'python %s/src/terminate_crts_cognitive_radio.py'",
-                  ssh_uname, np[j].server_ip, crts_dir); 
+                  ssh_uname, np[j].server_ip, crts_dir);
           int ssh_return = system(command);
           if (ssh_return < 0)
             printf("Error terminating CRTS on node %i: %s", j+1, np[j].server_ip);
         }
       }
-      
+
       // Close TCP Connections
       for (int j = 0; j < sp.num_nodes; j++) {
         close(TCP_nodes[j]);
@@ -603,11 +627,11 @@ int main(int argc, char **argv) {
 
       if (octave_log_summary)
         log_scenario_summary(i+1, rep_i, scenario_master_name, scenario_name, &sp);
-      
+
       // don't continue to next scenario if there was a user issued termination
       if (sig_terminate)
         break;
-      
+
     } // scenario repition loop
 
     // don't continue to next scenario if there was a user issued termination

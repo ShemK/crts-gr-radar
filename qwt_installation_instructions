@@ -1,0 +1,11 @@
+Download qwt from https://sourceforge.net/projects/qwt/files/qwt/
+
+Unzip
+
+cd qwt-6.xx
+
+qmake
+
+make
+
+sudo make install
